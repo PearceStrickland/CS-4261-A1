@@ -1,6 +1,7 @@
 const express = require('express');
 require('dotenv').config();
 require('./models/db');
+const userRouter = require('./routes/user')
 
 const User = require('./models/user')
 
@@ -8,17 +9,26 @@ const email = 'check@gmail.com'
 
 const app = express()
 
-app.post('/create-user', async (req, res) => {
-    const isNewUser = await User.isThisEmailInUse(email)
-    if(!isNewUser) 
-        return res.json({
-            success: false,
-            message: 'This email is already in use, try sign-in',
-        });
-     const user = await User({fullname: 'John', email: email, password: '1234'})
-     await user.save();
-     res.json(user)
-});
+/** 
+app.use((req, res, next) => {
+    req.on('data', chunk => {
+      const data = JSON.parse(chunk);
+      req.body = data;
+      next();
+    });
+    
+  });
+
+  */
+
+  app.use(express.json());
+  app.use(userRouter);
+  
+  app.get('/test', (req, res) => {
+    res.send('Hello world');
+  });
+
+
 
 app.get('/', (req, res) => {
     res.send('hellow world');
