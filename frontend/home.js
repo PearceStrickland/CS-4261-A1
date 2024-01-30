@@ -6,6 +6,10 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text>Welcome to the Home Screen!</Text>
       <Button title="Log Out" onPress={() => navigation.navigate('Login')} />
+      <Button
+        title="Go to Stocks"
+        onPress={() => navigation.navigate('Stocks', { symbol: 'AAPL' })} // 
+      />
     </View>
   );
 };
