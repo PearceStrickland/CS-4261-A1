@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const user ={
     fullname: '',
@@ -21,6 +22,8 @@ const userSchema = new mongoose.Schema({
     }
 
 });
+
+
 
 userSchema.statics.isThisEmailInUse = async function (email) {
     if (!email) throw new Error('Invalid Email');
