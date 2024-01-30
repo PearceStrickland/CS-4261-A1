@@ -23,6 +23,14 @@ app.use((req, res, next) => {
 
   app.use(express.json());
   app.use(userRouter);
+
+  const test = async (email, password) => {
+    const user = await User.findOne({ email: email });
+    const result = await user.comparePassword(password);
+    console.log(result);
+};
+
+test('hype7@gmail.com', '123456');
   
   app.get('/test', (req, res) => {
     res.send('Hello world');
