@@ -5,7 +5,7 @@ const userRouter = require('./routes/user')
 
 const User = require('./models/user')
 
-const email = 'check@gmail.com'
+
 
 const app = express()
 

@@ -8,8 +8,13 @@ const HomeScreen = ({ navigation }) => {
       <Button title="Log Out" onPress={() => navigation.navigate('Login')} />
       <Button
         title="Go to Stocks"
-        onPress={() => navigation.navigate('Stocks', { symbol: 'AAPL' })} // 
+        onPress={() => navigation.navigate('Stocks', { symbol: 'AAPL' })} 
       />
+      <Button
+        title="Go to Currency Exchange"
+        onPress={() => navigation.navigate('Currency')} // 
+      />
+      
     </View>
   );
 };

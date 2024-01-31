@@ -25,17 +25,18 @@ const SignUpScreen = ({ navigation }) => {
           fullname,
           email,
           password,
+          confirmPassword
         }),
       });
 
       const data = await response.json();
       if (data.success) {
-        // Handle successful signup
+    
         console.log('Signup successful', data);
-        // You might want to navigate to the login screen or directly to the home screen
+    
         navigation.navigate('Login');
       } else {
-        // Handle failed signup
+     
         setError(data.message || 'Failed to sign up.');
       }
     } catch (error) {
@@ -74,6 +75,10 @@ const SignUpScreen = ({ navigation }) => {
         secureTextEntry
       />
       <Button title="Sign Up" onPress={handleSignUp} />
+      <Button
+        title="Login"
+        onPress={() => navigation.navigate('Login')}
+      />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );

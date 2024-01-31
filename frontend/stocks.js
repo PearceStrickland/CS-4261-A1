@@ -16,15 +16,15 @@ const StocksScreen = ({ navigation }) => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.get(`https://www.alphavantage.co/query`, {
+      const response = await axios.get(`https://finnhub.io/api/v1/quote`, {
         params: {
-          function: 'GLOBAL_QUOTE',
           symbol: symbol.trim(),
-          apikey: 'P9NQ0949U34X44MC'
+          token: 'cmsoffpr01qpvcptb5v0cmsoffpr01qpvcptb5vg' 
         },
       });
-      if (response.data['Global Quote']) {
-        setStockData(response.data['Global Quote']);
+     
+      if (response.data.c) { // 'c' represents the current price
+        setStockData(response.data);
       } else {
         setError('Data not found for the given symbol');
       }
@@ -40,7 +40,7 @@ const StocksScreen = ({ navigation }) => {
     <View style={styles.container}>
       <TextInput
         style={styles.input}
-        placeholder="Enter stock symbol (e.g., MSFT)"
+        placeholder="Enter stock symbol (e.g., AAPL)"
         value={symbol}
         onChangeText={setSymbol}
         autoCapitalize="characters"
@@ -50,12 +50,12 @@ const StocksScreen = ({ navigation }) => {
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {stockData && (
         <View style={styles.stockInfo}>
-          <Text style={styles.title}>Stock Symbol: {stockData['01. symbol']}</Text>
-          <Text>Open: {stockData['02. open']}</Text>
-          <Text>High: {stockData['03. high']}</Text>
-          <Text>Low: {stockData['04. low']}</Text>
-          <Text>Price: {stockData['05. price']}</Text>
-          <Text>Volume: {stockData['06. volume']}</Text>
+          <Text style={styles.title}>Stock Symbol: {symbol}</Text>
+          <Text>Current Price: {stockData.c}</Text>
+          <Text>High: {stockData.h}</Text>
+          <Text>Low: {stockData.l}</Text>
+          <Text>Open: {stockData.o}</Text>
+          <Text>Previous Close: {stockData.pc}</Text>
         </View>
       )}
       <Button
