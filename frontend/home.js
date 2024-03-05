@@ -18,6 +18,10 @@ const HomeScreen = ({ navigation }) => {
         title="Go to Settings"
         onPress={() => navigation.navigate('Settings')} // 
       />
+      <Button
+        title="Go to BudgetOverview"
+        onPress={() => navigation.navigate('BudgetOverview')} // 
+      />
       
     </View>
   );

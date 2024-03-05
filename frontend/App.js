@@ -7,6 +7,7 @@ import StocksScreen from './stocks';
 import SignUpScreen from './signup';
 import CurrencyScreen from './currency';
 import SettingsScreen from './settings';
+import BudgetOverviewScreen from './BudgetOverview'
 
 
 const Stack = createStackNavigator();
@@ -21,6 +22,7 @@ const App = () => {
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="Currency" component={CurrencyScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="BudgetOverview" component={BudgetOverviewScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
