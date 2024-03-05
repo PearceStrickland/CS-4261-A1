@@ -31,15 +31,18 @@ const SettingsScreen = ({ navigation }) => {
 
     const handleOpenLink = () => {
         openLink({
-          token: 'GENERATED_LINK_TOKEN',
-          onSuccess: (success) => {
-            console.log('Plaid Link success:', success);
-          },
-          onExit: (exit) => {
-            console.log('Plaid Link exit:', exit);
-          },
-        });
-      };
+            tokenConfig: {
+              token: "link-sandbox-6ea96692-32ea-40d7-9493-23671331dc42", // Replace with the actual token from Plaid
+              noLoadingState: false, // Set to true to skip loading animation, if desired
+              logLevel: 'ERROR', // LogLevel can be 'DEBUG', 'INFO', 'WARN', or 'ERROR'
+            },
+            onSuccess: handleOnSuccess,
+            onExit: handleOnExit,
+            // Include any additional configuration required by your SDK...
+          }).catch(error => {
+            console.error('Error opening Plaid Link:', error);
+          });
+        };
   
   
 
@@ -66,28 +69,12 @@ const SettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
 
         
-        <TouchableOpacity style={styles.item}>
-        <PlaidLink
-        tokenConfig={{
-          token: "link-sandbox-6ea96692-32ea-40d7-9493-23671331dc42", // Replace with your actual generated link token
-          logLevel: 'ERROR', // Adjust log level as needed
-          noLoadingState: false, // Set to true to skip loading animation
-        }}
-        onSuccess={handleOnSuccess}
-        onExit={handleOnExit}
-        iOSPresentationStyle='FULL_SCREEN' // '' is also an option
-      >
-        
-        <FontAwesomeIcon icon={faLock} size={18} style={styles.itemIcon} />
-       
-        
-          <Text style={styles.itemText}>Add account</Text>
-          
-          
+        <TouchableOpacity style={styles.item} onPress={handleOpenLink}>
+          <FontAwesomeIcon icon={faBank} size={18} style={styles.itemIcon} />
+          <Text style={styles.itemText}>Link your bank account</Text>
           <FontAwesomeIcon icon={faChevronRight} size={18} style={styles.itemArrow} />
-      </PlaidLink>
-      
-      </TouchableOpacity>
+        </TouchableOpacity>
+    
       
      
         
