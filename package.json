@@ -3,6 +3,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/react-native-fontawesome": "^0.3.0",
-    "react-native-plaid-link-sdk": "^11.5.2"
+    "react-native-plaid-link-sdk": "^11.5.2",
+    "react-native-vector-icons": "^10.0.3"
   }
 }
