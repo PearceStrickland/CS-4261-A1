@@ -14,6 +14,10 @@ const HomeScreen = ({ navigation }) => {
         title="Go to Currency Exchange"
         onPress={() => navigation.navigate('Currency')} // 
       />
+      <Button
+        title="Go to Settings"
+        onPress={() => navigation.navigate('Settings')} // 
+      />
       
     </View>
   );
