@@ -43,6 +43,13 @@ const HomeScreen = ({ navigation }) => {
             Stock Page
           </Button>
           <Button
+            mode="contained"
+            onPress={() => navigation.navigate('Assistant')}
+            style={styles.button}
+          >
+            Assistant Page
+          </Button>
+          <Button
             mode="outlined"
             onPress={() => navigation.navigate('Login')}
             style={styles.logoutButton}

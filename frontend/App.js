@@ -8,6 +8,7 @@ import SignUpScreen from './signup';
 import CurrencyScreen from './currency';
 import SettingsScreen from './settings';
 import BudgetOverviewScreen from './BudgetOverview'
+import AssistantScreen from './assistant'
 
 
 const Stack = createStackNavigator();
@@ -23,6 +24,7 @@ const App = () => {
         <Stack.Screen name="Currency" component={CurrencyScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="BudgetOverview" component={BudgetOverviewScreen} />
+        <Stack.Screen name="Assistant" component={AssistantScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
