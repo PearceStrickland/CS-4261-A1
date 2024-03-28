@@ -13,6 +13,7 @@ const AssistantScreen = () => {
         setConversation(newConversation);
 
         try {
+            console.log(newConversation.map(c => ({ role: "user", content: c.text })))
             const response = await axios.post(
                 'https://api.openai.com/v1/chat/completions',
                 {
@@ -22,7 +23,7 @@ const AssistantScreen = () => {
                 },
                 {
                     headers: {
-                        'Authorization': `Bearer "Put secret key here"`,
+                        'Authorization': `Bearer "Put secret key here."`,
                         'Content-Type': 'application/json',
                     },
                 }

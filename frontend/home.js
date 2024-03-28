@@ -44,7 +44,7 @@ const HomeScreen = ({ navigation }) => {
           </Button>
           <Button
             mode="contained"
-            onPress={() => navigation.navigate('Assistant')}
+            onPress={() => navigation.navigate('Chat')}
             style={styles.button}
           >
             Assistant Page
