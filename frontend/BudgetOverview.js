@@ -1,113 +1,259 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faCutlery, faCoffee, faBicycle, faGift, faShoppingBag, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { useAuth } from './AuthContext';
+import axios from 'axios';
 
 const BudgetOverviewScreen = () => {
-  // Mock data
-  const transactions = [
-    { date: 'Today', category: 'Food', amount: -18, icon: faCutlery },
-    { date: 'Today', category: 'Coffee', amount: -10, icon: faCoffee },
-    { date: 'Feb 24', category: 'Fitness', amount: -80, icon: faBicycle },
-    { date: 'Feb 24', category: 'Gift', amount: -18, icon: faGift },
-    { date: 'Feb 24', category: 'Clothing', amount: -25, icon: faShoppingBag },
-  ];
+  const { accessToken } = useAuth();
+  const [transactions, setTransactions] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [months, setMonths] = useState([]);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [totalBudget, setTotalBudget] = useState(4000); // Assuming a fixed total budget, set this to your default or fetched value
+  const [remainingAmount, setRemainingAmount] = useState(totalBudget);
+  
+  
+
+  const formatDate = (dateString) => {
+    const parts = dateString.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Adjust month (-1)
+    const date = new Date(year, month);
+  
+    const options = { year: 'numeric', month: 'long' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  useEffect(() => {
+    if (accessToken) {
+      axios.post('https://sandbox.plaid.com/transactions/sync', {
+        client_id: '65e23a52dbf9aa001b55b5a0',
+        secret: 'aa6c0c28445c17d25b2825d8c1ac55',
+        access_token: accessToken
+      })
+      .then(response => {
+        const combinedTransactions = [...response.data.added, ...response.data.modified];
+        combinedTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setTransactions(combinedTransactions);
+
+        const uniqueMonths = Array.from(new Set(combinedTransactions.map(t => t.date.slice(0, 7)))).sort().reverse();
+        setMonths(uniqueMonths);
+        setSelectedMonth(uniqueMonths[0]);
+        calculateTotalForMonth(uniqueMonths[0], combinedTransactions);
+      })
+      .catch(error => {
+        console.error('Error fetching transactions:', error);
+      });
+    }
+  }, [accessToken]);
+
+  const calculateTotalForMonth = (month, transactionsToSum) => {
+    const monthTransactions = transactionsToSum.filter(t => t.date.startsWith(month) && t.amount > 0);
+    const total = monthTransactions.reduce((acc, transaction) => acc + transaction.amount, 0);
+    setTotalAmount(total);
+    setRemainingAmount(totalBudget - total);
+  };
+
+  const selectMonth = (month) => {
+    setSelectedMonth(month);
+    calculateTotalForMonth(month, transactions);
+    setModalVisible(false);
+  };
+  console.log(transactions)
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.month}>FEBRUARY ↓</Text>
-        <FontAwesomeIcon icon={faEllipsisV} size={24} color="black" />
-      </View>
+    <TouchableOpacity style={styles.monthSelector} onPress={() => setModalVisible(true)}>
+      <Text style={styles.monthText}>{formatDate(`${selectedMonth}-01`)}</Text>
+    </TouchableOpacity>
 
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isModalVisible}
+      onRequestClose={() => setModalVisible(false)}
+    >
+      <View style={styles.modalView}>
+        <Text style={styles.modalTitle}>Month</Text>
+        <FlatList
+          data={months}
+          keyExtractor={item => item}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.modalItem} onPress={() => selectMonth(item)}>
+              <Text style={styles.modalText}>{formatDate(`${item}-01`)}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+    </Modal>
 
-      <View style={styles.summary}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>$4200</Text>
-          <Text style={styles.summaryLabel}>Budget</Text>
+    <View style={styles.budgetHeader}>
+      <View style={styles.budgetInfo}>
+        <View style={styles.budgetInfoItem}>
+          <Text style={styles.budgetLabel}>Total Budget</Text>
+          <Text style={styles.budgetValue}>${totalBudget.toFixed(2)}</Text>
         </View>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>$1892</Text>
-          <Text style={styles.summaryLabel}>Balance Remaining</Text>
+        <View style={styles.divider}></View>
+        <View style={styles.budgetInfoItem}>
+          <Text style={styles.budgetLabel}>Spent this Month</Text>
+          <Text style={styles.budgetValue}>${totalAmount.toFixed(2)}</Text>
         </View>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>-$2308</Text>
-          <Text style={styles.summaryLabel}>Expenses</Text>
+        <View style={styles.divider}></View>
+        <View style={styles.budgetInfoItem}>
+          <Text style={styles.budgetLabel}>Remaining</Text>
+          <Text style={styles.remainValue}>${(totalBudget - totalAmount).toFixed(2)}</Text>
         </View>
       </View>
+    </View>
 
-      <View style={styles.transactionList}>
-        {transactions.map((transaction, index) => (
-          <View key={`transaction-${index}`} style={styles.transactionItem}>
-          {transaction.icon ? <FontAwesomeIcon icon={transaction.icon} size={24} color="black" /> : <Text>No Icon</Text>}    
-            <View style={styles.transactionDetails}>
-              <Text style={styles.transactionCategory}>{transaction.category}</Text>
-              <Text style={styles.transactionDate}>{transaction.date}</Text>
-            </View>
-            <Text style={styles.transactionAmount}>{transaction.amount}</Text>
-          </View>
-        ))}
+    <Text style={styles.totalAmount}>Total for {formatDate(`${selectedMonth}-01`)}: ${totalAmount.toFixed(2)}</Text>
+    {transactions.filter(t => t.date.startsWith(selectedMonth))
+    .filter(t => t.amount > 0)
+    .map((transaction, index) => (
+      <View key={index} style={styles.transactionItem}>
+        <Image 
+          source={{ uri: transaction.logo_url || 'https://via.placeholder.com/150' }} 
+          style={styles.logo} 
+        />
+        <View style={styles.transactionDetails}>
+          <Text style={styles.transactionName}>{transaction.name}</Text>
+          <Text style={styles.transactionDate}>{transaction.date}</Text>
+          <Text style={styles.transactionCategory}>{transaction.category?.join(', ') || 'No Category'}</Text>
+          <Text style={styles.transactionAmount}>${transaction.amount}</Text>
+        </View>
       </View>
-    </ScrollView>
-  );
+    ))}
+  </ScrollView>
+);
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  budgetHeader: {
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
-  header: {
+  headerTitle: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#343a40',
+  },
+  budgetInfo: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+    padding: 15,
+  },
+  budgetInfoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 20,
-    backgroundColor: '#ffebc5',
-    alignItems: 'center',
-  },
-  month: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  summary: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    backgroundColor: '#ffdeab',
-  },
-  summaryItem: {
-    alignItems: 'center',
-  },
-  summaryValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#555',
-  },
-  transactionList: {
-    padding: 20,
-  },
-  transactionItem: {
-    flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
   },
-  transactionDetails: {
-    marginLeft: 10,
+  budgetLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6c757d',
+  },
+  budgetValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#343a40',
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+    marginVertical: 10,
+  },
+  positive: {
+    backgroundColor: '#d4edda',
+  },
+  negative: {
+    backgroundColor: '#f8d7da',
+  },
+  remainValue: {
+    color: 'green',
+  },
+  container: {
     flex: 1,
   },
-  transactionCategory: {
+  monthSelector: {
+    padding: 10,
+    backgroundColor: '#f2f2f2',
+    alignItems: 'center',
+  },
+  monthText: {
     fontSize: 16,
+  },
+  modalView: {
+    marginTop: 22,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalItem: {
+    padding: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  totalAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    padding: 10,
+  },
+  transactionItem: {
+    flexDirection: 'row',
+    padding: 10,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginRight: 10,
+  },
+  transactionDetails: {
+    flex: 1,
+  },
+  transactionName: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   transactionDate: {
     fontSize: 14,
-    color: '#888',
+  },
+  transactionCategory: {
+    fontSize: 14,
   },
   transactionAmount: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#d9534f',
   },
 });
 

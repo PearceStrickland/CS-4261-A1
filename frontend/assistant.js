@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, ScrollView, Text, StyleSheet } from 'react-native';
+import React, {useState, useCallback} from 'react';
+import {View, StyleSheet} from 'react-native';
+import { GiftedChat } from 'react-native-gifted-chat';
 import axios from 'axios';
 
 const AssistantScreen = () => {
-    const [message, setMessage] = useState('');
+    const [messages, setMessages] = useState([{
+        "text": "Hello! I am your personal budget buddy. Ask me anything.",
+        "_id": Date.now().toString(),
+        "user": {
+            "_id": 2,
+              "avatar": "https://s3.amazonaws.com/pix.iemoji.com/images/emoji/apple/ios-12/256/robot-face.png"
+        }}
+    ]);
+
     const [conversation, setConversation] = useState([]);
 
-    const sendMessage = async () => {
-        if (!message.trim()) return;
+    const onSend = useCallback(async (messages = []) => {
+        setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
+        mytext = messages[0].text;
+        const newConversation = [...conversation, { sender: 'User', text: mytext}];
+        setConversation(newConversation)
 
-        const newConversation = [...conversation, { sender: 'User', text: message.trim() }];
-        setConversation(newConversation);
-
+        responseText = '';
         try {
             const response = await axios.post(
                 'https://api.openai.com/v1/chat/completions',
@@ -22,44 +32,48 @@ const AssistantScreen = () => {
                 },
                 {
                     headers: {
-                        'Authorization': `Bearer "Put secret key here"`,
+                        'Authorization': `Bearer `,
                         'Content-Type': 'application/json',
                     },
                 }
             );
-
+            console.log(response)
             // This assumes the response is well-formed with the choices array not empty.
             if (response.data.choices && response.data.choices.length > 0) {
-                setConversation(convo => [...convo, { sender: 'ChatGPT', text: response.data.choices[0].message.content.trim() }]);
+                responseText = response.data.choices[0].message.content.trim();
+            } else {
+                responseText = 'Error connecting to Budget Buddy. Please try again.'
             }
-        } catch (error) {
+        }  catch (error) {
             console.error('Error sending message to OpenAI:', error);
-        }
-
-        setMessage('');
-    };
+            responseText = 'Error connecting to Budget Buddy. Please try again.'
+        } finally {
+            responseMessage = [{
+                "text": responseText,
+                "_id": Date.now().toString(),
+                "user": {
+                    "_id": 2,
+                      "avatar": "https://s3.amazonaws.com/pix.iemoji.com/images/emoji/apple/ios-12/256/robot-face.png"
+                }}];
+            setMessages(previousMessages => GiftedChat.append(previousMessages, responseMessage));
+        }    
+    })
 
     return (
         <View style={styles.container}>
-            <ScrollView style={styles.conversation} ref={scrollView => scrollView && scrollView.scrollToEnd({ animated: true })}>
-                {conversation.map((msg, index) => (
-                    <Text key={index} style={styles.message(msg.sender)}>
-                        {msg.sender === 'User' ? 'You: ' : 'ChatGPT: '}{msg.text}
-                    </Text>
-                ))}
-            </ScrollView>
-            <TextInput
-                style={styles.input}
-                value={message}
-                onChangeText={setMessage}
-                placeholder="Ask something..."
-                onSubmitEditing={sendMessage} // Allows to send message with the return key on the keyboard
-                returnKeyType="send"
+            <GiftedChat 
+                messages = {messages}
+                onSend={messages => onSend(messages)}
+                user={{_id:1}}
+                minInputToolbarHeight={150}
+                minComposerHeight={100}
+                alwaysShowSend={true}
+                infiniteScroll={true}
+                loadEarlier={false}
             />
-            <Button title="Send" onPress={sendMessage} />
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -70,10 +84,6 @@ const styles = StyleSheet.create({
         flex: 1,
         marginBottom: 20,
     },
-    message: sender => ({
-        marginBottom: 10,
-        alignSelf: sender === 'User' ? 'flex-end' : 'flex-start',
-    }),
     input: {
         borderWidth: 1,
         borderColor: 'gray',

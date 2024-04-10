@@ -3,10 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert } f
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faUserEdit, faLock, faBank, faChevronRight, faBell, faInfoCircle, faShieldAlt, faCog } from '@fortawesome/free-solid-svg-icons';
 import { PlaidLink, openLink} from 'react-native-plaid-link-sdk';
+import axios from 'axios';
+import { useAuth } from './AuthContext'
 
 const SettingsScreen = ({ navigation }) => {
     const [isSwitchOn, setSwitchOn] = useState(false);
     const plaidLinkRef = useRef(null);
+    const { setAccessToken } = useAuth();
   
     const toggleSwitch = () => {
       setSwitchOn(previousState => !previousState);
@@ -15,9 +18,28 @@ const SettingsScreen = ({ navigation }) => {
     const handleOnSuccess = (success) => {
       console.log('Plaid Link success: ', success);
       // Close Plaid Link after success
+
       if (plaidLinkRef.current) {
         plaidLinkRef.current.dismiss();
       }
+      const plaidClientID = '';
+      const plaidSecret = '';
+
+      const plaidExchangeEndpoint = 'https://sandbox.plaid.com/item/public_token/exchange';
+      axios.post(plaidExchangeEndpoint, {
+        client_id: plaidClientID,
+        secret: plaidSecret,
+        public_token: success.publicToken
+      })
+      .then(response => {
+        const accessToken = response.data.access_token;
+        console.log('Access token:', accessToken);
+        setAccessToken(accessToken);
+        // Use the access token to make Plaid requests
+      })
+      .catch(error => {
+        console.error('Error exchanging public token:', error);
+      });
       // You might want to send 'success.publicToken' to your server here to exchange for an access token
     };
   
@@ -32,7 +54,7 @@ const SettingsScreen = ({ navigation }) => {
     const handleOpenLink = () => {
         openLink({
             tokenConfig: {
-              token: "link-sandbox-6ea96692-32ea-40d7-9493-23671331dc42", // Replace with the actual token from Plaid
+              token: "link-sandbox-3f215fda-e432-434e-86c4-9fb41afdce99", // Replace with the actual token from Plaid
               noLoadingState: false, // Set to true to skip loading animation, if desired
               logLevel: 'ERROR', // LogLevel can be 'DEBUG', 'INFO', 'WARN', or 'ERROR'
             },

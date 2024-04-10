@@ -14,13 +14,7 @@ const HomeScreen = ({ navigation }) => {
         </Card>
 
         <View style={styles.buttonContainer}>
-          <Button
-            mode="contained"
-            onPress={() => navigation.navigate('Currency')}
-            style={styles.button}
-          >
-            Currency Exchange
-          </Button>
+          
           <Button
             mode="contained"
             onPress={() => navigation.navigate('Settings')}
@@ -50,12 +44,20 @@ const HomeScreen = ({ navigation }) => {
             Assistant Page
           </Button>
           <Button
+            mode="contained"
+            onPress={() => navigation.navigate('BudgetOverview2')}
+            style={styles.button}
+          >
+            BudgetOverview2
+          </Button>
+          <Button
             mode="outlined"
             onPress={() => navigation.navigate('Login')}
             style={styles.logoutButton}
           >
             Log Out
           </Button>
+          
         </View>
       </View>
     </SafeAreaView>
