@@ -16,7 +16,7 @@ const SignUpScreen = ({ navigation }) => {
 
     setError('');
     try {
-      const response = await fetch('http://localhost:8000/create-user', {
+      const response = await fetch('https://cs4261-budget-buddy-b244eb0e4e74.herokuapp.com/create-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

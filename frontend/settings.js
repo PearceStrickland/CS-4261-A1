@@ -22,8 +22,9 @@ const SettingsScreen = ({ navigation }) => {
       if (plaidLinkRef.current) {
         plaidLinkRef.current.dismiss();
       }
-      const plaidClientID = '';
-      const plaidSecret = '';
+      const plaidClientID = '65e23a52dbf9aa001b55b5a0';
+      const plaidSecret = 'aa6c0c28445c17d25b2825d8c1ac55';
+
 
       const plaidExchangeEndpoint = 'https://sandbox.plaid.com/item/public_token/exchange';
       axios.post(plaidExchangeEndpoint, {
@@ -54,7 +55,7 @@ const SettingsScreen = ({ navigation }) => {
     const handleOpenLink = () => {
         openLink({
             tokenConfig: {
-              token: "link-sandbox-3f215fda-e432-434e-86c4-9fb41afdce99", // Replace with the actual token from Plaid
+              token: "link-sandbox-f7a777e9-9c3e-4658-9252-df9f84705514", // Replace with the actual token from Plaid
               noLoadingState: false, // Set to true to skip loading animation, if desired
               logLevel: 'ERROR', // LogLevel can be 'DEBUG', 'INFO', 'WARN', or 'ERROR'
             },

@@ -42,8 +42,9 @@ app.get('/', (req, res) => {
     res.send('hellow world');
 });
 
-app.listen(8000, () => {
-    console.log('port is listenting')
-})
+const PORT = process.env.PORT || 8000; // Fallback to 8000 if process.env.PORT is not defined
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
 
 //pearcestrickland88:<password>@budgetbeam1.imowwxm.mongodb.net/?retryWrites=true&w=majority

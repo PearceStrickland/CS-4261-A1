@@ -1,26 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, ScrollView, SectionList, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, Dimensions, SectionList } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { useAuth } from './AuthContext';
 import axios from 'axios';
 
-const BudgetOverviewScreen2 = () => {
+const BudgetOverview2 = () => {
   const { accessToken } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [groupedTransactions, setGroupedTransactions] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
+  const [totalBudget, setTotalBudget] = useState(4000);
+  const [remainingAmount, setRemainingAmount] = useState(totalBudget);
   const [months, setMonths] = useState([]);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [sortType, setSortType] = useState({});
+  
 
   const formatDate = (dateString) => {
     const parts = dateString.split('-');
     const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // Adjust month (-1)
+    const month = parseInt(parts[1], 10) - 1;
     const date = new Date(year, month);
-
-    const options = { year: 'numeric', month: 'long' };
-    return date.toLocaleDateString('en-US', options);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
   };
 
   useEffect(() => {
@@ -35,64 +37,89 @@ const BudgetOverviewScreen2 = () => {
         combinedTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
         setTransactions(combinedTransactions);
 
-        // Group transactions by category
-        const transactionsByCategory = combinedTransactions.reduce((acc, transaction) => {
-          const monthYear = transaction.date.slice(0, 7);
-          const category = transaction.category ? transaction.category[0] : 'Uncategorized';
-          if (!acc[monthYear]) acc[monthYear] = {};
-          if (!acc[monthYear][category]) acc[monthYear][category] = [];
-          acc[monthYear][category].push(transaction);
-          return acc;
-        }, {});
+        const uniqueMonths = Array.from(new Set(combinedTransactions.map(t => t.date.slice(0, 7)))).sort().reverse();
+        setMonths(uniqueMonths);
+        setSelectedMonth(uniqueMonths[0]);
+        calculateTotalForMonth(uniqueMonths[0], combinedTransactions);
 
-        // Prepare data for SectionList
-        const selectedMonthTransactions = transactionsByCategory[selectedMonth] || {};
-        const groupedData = Object.keys(selectedMonthTransactions).map(category => ({
-          title: category,
-          data: selectedMonthTransactions[category],
-        }));
-
-        setGroupedTransactions(groupedData);
-        setMonths(Object.keys(transactionsByCategory).sort().reverse());
-        setSelectedMonth(Object.keys(transactionsByCategory).sort().reverse()[0]);
-        calculateTotalForMonth(selectedMonth, combinedTransactions);
+        groupTransactionsByCategory(combinedTransactions, uniqueMonths[0]);
       })
       .catch(error => {
         console.error('Error fetching transactions:', error);
       });
     }
-  }, [accessToken, selectedMonth]);
+  }, [accessToken]);
 
   const calculateTotalForMonth = (month, transactionsToSum) => {
-    const monthTransactions = transactionsToSum.filter(t => t.date.slice(0, 7) === month && t.amount > 0);
+    const monthTransactions = transactionsToSum.filter(t => t.date.startsWith(month) && t.amount > 0);
     const total = monthTransactions.reduce((acc, transaction) => acc + transaction.amount, 0);
     setTotalAmount(total);
+    setRemainingAmount(totalBudget - total);
   };
+
+  const groupTransactionsByCategory = (transactions, month) => {
+    const transactionsByCategory = transactions.reduce((acc, transaction) => {
+        const monthYear = transaction.date.slice(0, 7);
+        const category = transaction.category ? transaction.category[0] : 'Uncategorized';
+        if (!acc[monthYear]) acc[monthYear] = {};
+        if (!acc[monthYear][category]) acc[monthYear][category] = [];
+        acc[monthYear][category].push(transaction);
+        return acc;
+    }, {});
+
+    const selectedMonthTransactions = transactionsByCategory[month] || {};
+
+    const groupedData = Object.keys(selectedMonthTransactions).map(category => {
+        let sortedTransactions = selectedMonthTransactions[category];
+        if (sortType[category] === 'date') {
+            sortedTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+        } else if (sortType[category] === 'alphabetical') {
+            sortedTransactions.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        return {
+            title: category,
+            data: sortedTransactions,
+            amount: sortedTransactions
+                .filter(t => t.amount > 0)
+                .reduce((sum, t) => sum + t.amount, 0),
+        };
+    });
+
+    setGroupedTransactions(groupedData);
+};
+
 
   const selectMonth = (month) => {
     setSelectedMonth(month);
     calculateTotalForMonth(month, transactions);
+    groupTransactionsByCategory(transactions, month);
     setModalVisible(false);
   };
 
-  const renderTransaction = ({ item }) => (
-    <View style={styles.transactionItem}>
-      <Text style={styles.transactionName}>{item.name}</Text>
-      <Text style={styles.transactionAmount}>${Math.abs(item.amount).toFixed(2)}</Text>
-      <Text style={styles.transactionDate}>{formatDate(item.date)}</Text>
-    </View>
-  );
+  const chartData = () => {
+    const categoryColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF', '#FFCDCC'];
+    const colorMap = groupedTransactions.reduce((acc, section, index) => {
+      acc[section.title] = categoryColors[index % categoryColors.length];
+      return acc;
+    }, {});
+  
+    return groupedTransactions.map(section => ({
+      name: section.title,
+      amount: parseFloat(section.amount.toFixed(2)),
+      color: colorMap[section.title],
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 10,
+    })).filter(section => section.amount > 0);
+  };
 
-  const renderSectionHeader = ({ section: { title } }) => (
-    <Text style={styles.sectionHeader}>{title}</Text>
-  );
-
+ 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <TouchableOpacity style={styles.monthSelector} onPress={() => setModalVisible(true)}>
-        <Text style={styles.monthText}>{'March' && formatDate(`March-01`)}</Text>
+        <Text style={styles.monthText}>{formatDate(`${selectedMonth}-01`)}</Text>
       </TouchableOpacity>
-
+  
       <Modal
         animationType="slide"
         transparent={true}
@@ -100,59 +127,101 @@ const BudgetOverviewScreen2 = () => {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalView}>
-          <Text style={styles.modalTitle}>Month</Text>
+          <Text style={styles.modalTitle}>Select Month</Text>
           <FlatList
             data={months}
             keyExtractor={item => item}
             renderItem={({ item }) => (
               <TouchableOpacity style={styles.modalItem} onPress={() => selectMonth(item)}>
                 <Text style={styles.modalText}>{formatDate(`${item}-01`)}</Text>
-                </TouchableOpacity>
+              </TouchableOpacity>
             )}
           />
         </View>
       </Modal>
-
-      <Text style={styles.totalAmount}>Total for {selectedMonth && formatDate(`${selectedMonth}-01`)}: ${totalAmount.toFixed(2)}</Text>
-
-      <PieChart
-        data={groupedTransactions.map(section => {
-            const positiveTransactions = section.data.filter(t => t.amount > 0); // Filter out negative transactions
-            const total = positiveTransactions.reduce((sum, t) => sum + t.amount, 0);
-            return {
-              name: section.title,
-              amount: parseFloat(total.toFixed(2)),
-              color: '#' + Math.floor(Math.random()*16777215).toString(16),
-              legendFontColor: '#7F7F7F',
-              legendFontSize: 10,
-            };
-          }).filter(section => section.amount > 0)} 
-        width={Dimensions.get('window').width}
-        height={220}
-        chartConfig={{
-          backgroundColor: '#000000',
-          backgroundGradientFrom: '#1E2923',
-          backgroundGradientTo: '#08130D',
-          color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-          strokeWidth: 2, // optional, default 3
-          barPercentage: 0.5,
-          useShadowColorFromDataset: false, // optional
-        }}
-        accessor="amount"
-        backgroundColor="transparent"
-        paddingLeft="15"
-        center={[10, 10]}
-        absolute
-      />
-
+  
       <SectionList
         sections={groupedTransactions}
-        keyExtractor={(item, index) => item + index}
-        renderItem={renderTransaction}
-        renderSectionHeader={renderSectionHeader}
+        keyExtractor={(item, index) => item.id + index}
+        renderItem={({ item }) => (
+          <View key={item.id} style={styles.transactionItem}>
+            <Image
+              source={{ uri: item.logo_url || 'https://via.placeholder.com/150' }}
+              style={styles.logo}
+            />
+            <View style={styles.transactionDetails}>
+              <Text style={styles.transactionName}>{item.name}</Text>
+              <Text style={styles.transactionDate}>{item.date}</Text>
+              <Text style={styles.transactionCategory}>{item.category?.join(', ') || 'No Category'}</Text>
+              <Text style={styles.transactionAmount}>${item.amount.toFixed(2)}</Text>
+            </View>
+          </View>
+        )}
+        renderSectionHeader={({ section: { title } }) => (
+          <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>{title}</Text>
+              <TouchableOpacity
+                  onPress={() => {
+                      setSortType({
+                          ...sortType,
+                          [title]: sortType[title] === 'date' ? 'alphabetical' : 'date',
+                      });
+                      groupTransactionsByCategory(transactions, selectedMonth);
+                  }}
+                  style={styles.sortButton}
+              >
+                  <Text style={styles.sortButtonText}>
+                      {sortType[title] === 'date' ? 'Sort by Name' : 'Sort by Date'}
+                  </Text>
+              </TouchableOpacity>
+          </View>
+      )}
+      
+        ListHeaderComponent={
+          <>
+           <View style={styles.budgetHeader}>
+      <View style={styles.budgetInfo}>
+        <View style={styles.budgetInfoItem}>
+          <Text style={styles.budgetLabel}>Total Budget</Text>
+          <Text style={styles.budgetValue}>${totalBudget.toFixed(2)}</Text>
+        </View>
+        <View style={styles.divider}></View>
+        <View style={styles.budgetInfoItem}>
+          <Text style={styles.budgetLabel}>Spent this Month</Text>
+          <Text style={styles.budgetValue}>${totalAmount.toFixed(2)}</Text>
+        </View>
+        <View style={styles.divider}></View>
+        <View style={styles.budgetInfoItem}>
+          <Text style={styles.budgetLabel}>Remaining</Text>
+          <Text style={styles.remainValue}>${(totalBudget - totalAmount).toFixed(2)}</Text>
+        </View>
+      </View>
+    </View>
+            <View style={styles.chartContainer}>
+            <PieChart
+              data={chartData()}
+              width={Dimensions.get('window').width}
+              height={240}
+              chartConfig={{
+                backgroundColor: '#ffffff',
+                backgroundGradientFrom: '#ffffff',
+                backgroundGradientTo: '#ffffff',
+                color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              }}
+              accessor="amount"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              center={[0, 0]}
+              absolute
+            />
+            </View>
+          </>
+        }
       />
-    </ScrollView>
+    </View>
   );
+  
 };
 
 const styles = StyleSheet.create({
@@ -194,6 +263,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  budgetInfo: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+    padding: 15,
+  },
+  budgetInfoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  budgetLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6c757d',
+  },
+  budgetValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#343a40',
+  },
   totalAmount: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -202,30 +297,37 @@ const styles = StyleSheet.create({
   },
   transactionItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 10,
-    marginHorizontal: 10,
-    marginBottom: 10,
-    backgroundColor: '#ecf0f1',
-    borderRadius: 5,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginRight: 10,
+  },
+  transactionDetails: {
+    flex: 1,
   },
   transactionName: {
     fontSize: 16,
     fontWeight: 'bold',
-    width: '50%', // Adjust the width as needed
-  },
-  transactionAmount: {
-    fontSize: 16,
-    color: '#c0392b',
-    width: '25%', // Adjust the width as needed
-    textAlign: 'center', // Center the amount
   },
   transactionDate: {
     fontSize: 14,
-    color: '#7f8c8d',
-    width: '25%', // Adjust the width as needed
-    textAlign: 'right', // Align the date to the right
+  },
+  transactionCategory: {
+    fontSize: 14,
+  },
+  transactionAmount: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  chartContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  
   },
   sectionHeader: {
     fontWeight: 'bold',
@@ -237,4 +339,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BudgetOverviewScreen2;
+
+export default BudgetOverview2;

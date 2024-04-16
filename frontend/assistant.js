@@ -34,7 +34,7 @@ const AssistantScreen = () => {
                     headers: {
                         'Authorization': `Bearer `,
                         'Content-Type': 'application/json',
-                    },
+                    }, 
                 }
             );
             console.log(response)
