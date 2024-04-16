@@ -1,28 +1,23 @@
 import React from 'react';
-import { View, StyleSheet, SafeAreaView, ImageBackground } from 'react-native';
-import { Button, Card, Title } from 'react-native-paper';
+import { View, StyleSheet, ImageBackground, Text } from 'react-native';
+import { Button } from 'react-native-paper';
 
 const HomeScreen = ({ navigation }) => {
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground 
-        source={require('./homescreenback.jpg')} // Make sure the path is correct
-        resizeMode="cover" // This will cover the whole area without stretching
-        style={styles.backgroundImage}
-      >
-        <View style={styles.content}>
-          <Card style={styles.card}>
-            <Card.Content>
-              <Title style={styles.title}>Welcome to BudgetBuddy!</Title>
-            </Card.Content>
-          </Card>
+    <ImageBackground 
+      source={require('./homescreenback.jpg')}
+      resizeMode="cover"
+      style={styles.backgroundImage}
+    >
+      <View style={styles.content}>
+        <Text style={styles.title}>Welcome to BudgetBuddy!</Text>
 
-          <View style={styles.buttonContainer}>
-          
+        <View style={styles.buttonContainer}>
           <Button
             mode="contained"
             onPress={() => navigation.navigate('Settings')}
-            style={styles.button}
+            style={[styles.button, styles.settingsButton]}
+            labelStyle={styles.buttonLabel}
           >
             Settings
           </Button>
@@ -30,20 +25,15 @@ const HomeScreen = ({ navigation }) => {
             mode="contained"
             onPress={() => navigation.navigate('BudgetOverview')}
             style={styles.button}
+            labelStyle={styles.buttonLabel}
           >
             Budget Overview
           </Button>
           <Button
             mode="contained"
-            onPress={() => navigation.navigate('Stocks')}
-            style={styles.button}
-          >
-            Stock Page
-          </Button>
-          <Button
-            mode="contained"
             onPress={() => navigation.navigate('Assistant')}
             style={styles.button}
+            labelStyle={styles.buttonLabel}
           >
             Assistant Page
           </Button>
@@ -51,6 +41,7 @@ const HomeScreen = ({ navigation }) => {
             mode="contained"
             onPress={() => navigation.navigate('BudgetOverview2')}
             style={styles.button}
+            labelStyle={styles.buttonLabel}
           >
             BudgetOverview2
           </Button>
@@ -58,54 +49,55 @@ const HomeScreen = ({ navigation }) => {
             mode="outlined"
             onPress={() => navigation.navigate('Login')}
             style={styles.logoutButton}
+            labelStyle={styles.buttonLabel}
           >
             Log Out
           </Button>
-          
         </View>
-
-        </View>
-      </ImageBackground>
-    </SafeAreaView>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   backgroundImage: {
-    flex: 1, // This makes sure the background image takes up the whole space
-    width: '100%', // These are required for ImageBackground to be full screen
-    height: '100%', // These are required for ImageBackground to be full screen
+    flex: 1,
+    justifyContent: 'center', // Center content for a better visual impact
   },
   content: {
     flex: 1,
-    justifyContent: 'flex-start',
+    justifyContent: 'space-around', // Evenly space children vertically
     alignItems: 'center',
-    paddingTop: 20,
-  },
-  card: {
-    width: '90%',
-    elevation: 4,
   },
   title: {
-    fontSize: 24,
-    textAlign: 'center',
-    marginVertical: 8,
+    color: '#ffffff', // White color for the text for better contrast
+    fontSize: 28, // Larger font size for the title
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)', // Text shadow for better readability
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+    marginBottom: 50, // Space from the buttons
   },
   buttonContainer: {
-    width: '90%',
+    width: '80%',
     justifyContent: 'center',
-    alignItems: 'stretch', // Make buttons stretch to fill the container
-    marginTop: 20,
   },
   button: {
-    marginVertical: 5, // Add vertical margin between buttons
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white
+    marginBottom: 10,
+    elevation: 3, // Adds shadow
+  },
+  settingsButton: {
+    // Extra style for the Settings button if needed
   },
   logoutButton: {
+    borderColor: '#ffffff', // White border for contrast
+    borderWidth: 1,
     marginTop: 10,
-    borderColor: '#6200ee',
+  },
+  buttonLabel: {
+    color: '#333333', // Dark text for readability on light buttons
+    fontSize: 16, // Bigger font size for button labels
   }
   // ... rest of your styles
 });
