@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Image, ImageBackground, TouchableHighlight } from 'react-native';
+import { useAuth } from './AuthContext'
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const { setJsonToken } = useAuth();
 
   const handleLogin = async () => {
     try {
@@ -22,6 +25,8 @@ const LoginScreen = ({ navigation }) => {
       const data = await response.json();
       if (data.success) {
         console.log('Login successful', data);
+        setJsonToken(data.token)
+        console.log(data.token)
         navigation.navigate('Home');
       } else {
         setError(data.message || 'Invalid login credentials');

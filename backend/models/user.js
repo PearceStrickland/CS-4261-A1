@@ -1,6 +1,14 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
+const transactionSchema = new mongoose.Schema({
+  name: String,
+  date: Date,
+  amount: Number,
+  categories: [String],
+  logoUrl: String,
+}, { _id: false }); 
+
 const user ={
     fullname: '',
     email: '',
@@ -16,10 +24,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    plaidAccessToken: {
+      type: String,
+      default: ''
+    },
     password: {
         type: String,
         required: true
-    }
+    },
+    transactions: [transactionSchema]
 
 });
 

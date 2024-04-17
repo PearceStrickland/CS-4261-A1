@@ -9,7 +9,7 @@ import { useAuth } from './AuthContext'
 const SettingsScreen = ({ navigation }) => {
     const [isSwitchOn, setSwitchOn] = useState(false);
     const plaidLinkRef = useRef(null);
-    const { setAccessToken } = useAuth();
+    const { setAccessToken, jsonToken } = useAuth();
   
     const toggleSwitch = () => {
       setSwitchOn(previousState => !previousState);
@@ -17,32 +17,44 @@ const SettingsScreen = ({ navigation }) => {
   
     const handleOnSuccess = (success) => {
       console.log('Plaid Link success: ', success);
-      // Close Plaid Link after success
-
       if (plaidLinkRef.current) {
         plaidLinkRef.current.dismiss();
       }
-      const plaidClientID = '65e23a52dbf9aa001b55b5a0';
-      const plaidSecret = 'aa6c0c28445c17d25b2825d8c1ac55';
-
-
-      const plaidExchangeEndpoint = 'https://sandbox.plaid.com/item/public_token/exchange';
-      axios.post(plaidExchangeEndpoint, {
-        client_id: plaidClientID,
-        secret: plaidSecret,
-        public_token: success.publicToken
+    
+      // Send the public token to the backend for exchange
+      axios.post('https://cs4261-budget-buddy-b244eb0e4e74.herokuapp.com/get-access-token', {
+        publicToken: success.publicToken
+      }, {
+        headers: {
+          'Authorization': `Bearer ${jsonToken}` // Ensure this is sent correctly
+        }
       })
       .then(response => {
-        const accessToken = response.data.access_token;
+        const { accessToken } = response.data;
         console.log('Access token:', accessToken);
         setAccessToken(accessToken);
-        // Use the access token to make Plaid requests
+        // Use the access token to make Plaid requests now stored in the backend
+        axios.post('https://cs4261-budget-buddy-b244eb0e4e74.herokuapp.com/store-transactions',
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${jsonToken}` // Ensure this is sent correctly
+          }
+        })
+        .then(response => {
+          console.log('store sucsses')
+          // Use the access token to make Plaid requests now stored in the backend
+        })
+        .catch(error => {
+          console.error('Error getting transaction:', error);
+        });
       })
       .catch(error => {
-        console.error('Error exchanging public token:', error);
+        console.error('Error exchanging public token via backend:', error);
       });
-      // You might want to send 'success.publicToken' to your server here to exchange for an access token
+     
     };
+    
   
     const handleOnExit = (exit) => {
       console.log('Plaid Link exit: ', exit);
@@ -55,7 +67,7 @@ const SettingsScreen = ({ navigation }) => {
     const handleOpenLink = () => {
         openLink({
             tokenConfig: {
-              token: "link-sandbox-f7a777e9-9c3e-4658-9252-df9f84705514", // Replace with the actual token from Plaid
+              token: "link-sandbox-ea3601c4-88c2-47cc-a847-17566c2621a1", // Replace with the actual token from Plaid
               noLoadingState: false, // Set to true to skip loading animation, if desired
               logLevel: 'ERROR', // LogLevel can be 'DEBUG', 'INFO', 'WARN', or 'ERROR'
             },

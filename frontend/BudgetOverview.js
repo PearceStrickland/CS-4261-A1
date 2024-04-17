@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext';
 import axios from 'axios';
 
 const BudgetOverviewScreen = () => {
-  const { accessToken } = useAuth();
+  const { accessToken, jsonToken } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
@@ -25,29 +25,28 @@ const BudgetOverviewScreen = () => {
     return date.toLocaleDateString('en-US', options);
   };
 
-  useEffect(() => {
-    if (accessToken) {
-      axios.post('https://sandbox.plaid.com/transactions/sync', {
-        client_id: '65e23a52dbf9aa001b55b5a0',
-        secret: 'aa6c0c28445c17d25b2825d8c1ac55',
-        access_token: accessToken
+    useEffect(() => {
+      axios.get('https://cs4261-budget-buddy-b244eb0e4e74.herokuapp.com/retrieve-transactions', {
+        headers: {
+          'Authorization': `Bearer ${jsonToken}` // Ensure this token is securely handled and correctly set
+        }
       })
       .then(response => {
-        const combinedTransactions = [...response.data.added, ...response.data.modified];
-        combinedTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        console.log('Transactions retrieved:', response.data);
+        combinedTransactions=response.data.transactions
         setTransactions(combinedTransactions);
-
+        console.log(combinedTransactions)
         const uniqueMonths = Array.from(new Set(combinedTransactions.map(t => t.date.slice(0, 7)))).sort().reverse();
         setMonths(uniqueMonths);
         setSelectedMonth(uniqueMonths[0]);
         calculateTotalForMonth(uniqueMonths[0], combinedTransactions);
+        // You can now do something with the retrieved transactions
       })
       .catch(error => {
-        console.error('Error fetching transactions:', error);
+        console.error('Error retrieving transactions:', error);
       });
-    }
-  }, [accessToken]);
-
+    }, [jsonToken]);
+      
   const calculateTotalForMonth = (month, transactionsToSum) => {
     const monthTransactions = transactionsToSum.filter(t => t.date.startsWith(month) && t.amount > 0);
     const total = monthTransactions.reduce((acc, transaction) => acc + transaction.amount, 0);

@@ -2,8 +2,10 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 exports.isAuth = async (req, res, next) => {
+  console.log("auth test1");
   if (req.headers && req.headers.authorization) {
     const token = req.headers.authorization.split(' ')[1];
+    console.log("auth test2");
 
     try {
       const decode = jwt.verify(token, process.env.JWT_SECRET);
