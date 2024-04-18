@@ -67,7 +67,7 @@ const SettingsScreen = ({ navigation }) => {
     const handleOpenLink = () => {
         openLink({
             tokenConfig: {
-              token: "link-sandbox-ea3601c4-88c2-47cc-a847-17566c2621a1", // Replace with the actual token from Plaid
+              token: "link-sandbox-0ea98de2-e8dc-4c7c-818f-28600f469d00", // Replace with the actual token from Plaid
               noLoadingState: false, // Set to true to skip loading animation, if desired
               logLevel: 'ERROR', // LogLevel can be 'DEBUG', 'INFO', 'WARN', or 'ERROR'
             },

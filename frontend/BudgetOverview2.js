@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import axios from 'axios';
 
 const BudgetOverview2 = () => {
-  const { accessToken } = useAuth();
+  const { accessToken, jsonToken } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [groupedTransactions, setGroupedTransactions] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState('');
@@ -26,29 +26,28 @@ const BudgetOverview2 = () => {
   };
 
   useEffect(() => {
-    if (accessToken) {
-      axios.post('https://sandbox.plaid.com/transactions/sync', {
-        client_id: '65e23a52dbf9aa001b55b5a0',
-        secret: 'aa6c0c28445c17d25b2825d8c1ac55',
-        access_token: accessToken
-      })
-      .then(response => {
-        const combinedTransactions = [...response.data.added, ...response.data.modified];
-        combinedTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setTransactions(combinedTransactions);
+    axios.get('https://cs4261-budget-buddy-b244eb0e4e74.herokuapp.com/retrieve-transactions', {
+      headers: {
+        'Authorization': `Bearer ${jsonToken}` // Ensure this token is securely handled and correctly set
+      }
+    })
+    .then(response => {
+    combinedTransactions=response.data.transactions;
+    setTransactions(combinedTransactions);
 
-        const uniqueMonths = Array.from(new Set(combinedTransactions.map(t => t.date.slice(0, 7)))).sort().reverse();
-        setMonths(uniqueMonths);
-        setSelectedMonth(uniqueMonths[0]);
-        calculateTotalForMonth(uniqueMonths[0], combinedTransactions);
+    const uniqueMonths = Array.from(new Set(combinedTransactions.map(t => t.date.slice(0, 7)))).sort().reverse();
+    setMonths(uniqueMonths);
+    setSelectedMonth(uniqueMonths[0]);
 
-        groupTransactionsByCategory(combinedTransactions, uniqueMonths[0]);
-      })
-      .catch(error => {
-        console.error('Error fetching transactions:', error);
-      });
-    }
-  }, [accessToken]);
+    // Update totals and group transactions
+    calculateTotalForMonth(uniqueMonths[0], combinedTransactions);
+    groupTransactionsByCategory(combinedTransactions, uniqueMonths[0])
+    })
+    .catch(error => {
+      console.error('Error fetching transactions:', error);
+    });
+    
+  }, [jsonToken]);
 
   const calculateTotalForMonth = (month, transactionsToSum) => {
     const monthTransactions = transactionsToSum.filter(t => t.date.startsWith(month) && t.amount > 0);
@@ -58,36 +57,25 @@ const BudgetOverview2 = () => {
   };
 
   const groupTransactionsByCategory = (transactions, month) => {
-    const transactionsByCategory = transactions.reduce((acc, transaction) => {
-        const monthYear = transaction.date.slice(0, 7);
-        const category = transaction.category ? transaction.category[0] : 'Uncategorized';
-        if (!acc[monthYear]) acc[monthYear] = {};
-        if (!acc[monthYear][category]) acc[monthYear][category] = [];
-        acc[monthYear][category].push(transaction);
-        return acc;
+    const monthTransactions = transactions.filter(t => t.date.startsWith(month));
+    const transactionsByCategory = monthTransactions.reduce((acc, transaction) => {
+      const category = transaction.categories ? transaction.categories[0] : 'Uncategorized';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(transaction);
+      return acc;
     }, {});
-
-    const selectedMonthTransactions = transactionsByCategory[month] || {};
-
-    const groupedData = Object.keys(selectedMonthTransactions).map(category => {
-        let sortedTransactions = selectedMonthTransactions[category];
-        if (sortType[category] === 'date') {
-            sortedTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
-        } else if (sortType[category] === 'alphabetical') {
-            sortedTransactions.sort((a, b) => a.name.localeCompare(b.name));
-        }
-
-        return {
-            title: category,
-            data: sortedTransactions,
-            amount: sortedTransactions
-                .filter(t => t.amount > 0)
-                .reduce((sum, t) => sum + t.amount, 0),
-        };
+  
+    const groupedData = Object.keys(transactionsByCategory).map(category => {
+      const sortedTransactions = transactionsByCategory[category];
+      return {
+        title: category,
+        data: sortedTransactions,
+        amount: sortedTransactions.reduce((sum, t) => sum + t.amount, 0),
+      };
     });
-
+  
     setGroupedTransactions(groupedData);
-};
+  };
 
 
   const selectMonth = (month) => {
@@ -109,7 +97,7 @@ const BudgetOverview2 = () => {
       amount: parseFloat(section.amount.toFixed(2)),
       color: colorMap[section.title],
       legendFontColor: '#7F7F7F',
-      legendFontSize: 10,
+      legendFontSize: 11,
     })).filter(section => section.amount > 0);
   };
 
@@ -142,18 +130,22 @@ const BudgetOverview2 = () => {
   
       <SectionList
         sections={groupedTransactions}
-        keyExtractor={(item, index) => item.id + index}
+        keyExtractor={(item, index) => `transaction-${item.date}-${item.name}-${index}`}
         renderItem={({ item }) => (
           <View key={item.id} style={styles.transactionItem}>
             <Image
-              source={{ uri: item.logo_url || 'https://via.placeholder.com/150' }}
+              source={{ uri: item.logoUrl || 'https://via.placeholder.com/150' }}
               style={styles.logo}
             />
             <View style={styles.transactionDetails}>
               <Text style={styles.transactionName}>{item.name}</Text>
-              <Text style={styles.transactionDate}>{item.date}</Text>
-              <Text style={styles.transactionCategory}>{item.category?.join(', ') || 'No Category'}</Text>
-              <Text style={styles.transactionAmount}>${item.amount.toFixed(2)}</Text>
+              <Text style={styles.transactionDate}>{new Date(item.date).toLocaleDateString()}</Text>
+              <Text style={styles.transactionCategory}>
+                {item.categories ? item.categories.join(', ') : 'No Category'}
+              </Text>
+              <Text style={styles.transactionAmount}>
+                ${item.amount.toFixed(2)}
+              </Text>
             </View>
           </View>
         )}
@@ -211,7 +203,7 @@ const BudgetOverview2 = () => {
               }}
               accessor="amount"
               backgroundColor="transparent"
-              paddingLeft="15"
+              paddingLeft="8"
               center={[0, 0]}
               absolute
             />

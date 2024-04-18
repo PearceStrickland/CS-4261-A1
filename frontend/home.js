@@ -1,17 +1,17 @@
 import React from 'react';
-import { View, StyleSheet, ImageBackground, Text } from 'react-native';
+import { View, StyleSheet, ImageBackground, Text, Image } from 'react-native';
 import { Button } from 'react-native-paper';
 
 const HomeScreen = ({ navigation }) => {
   return (
     <ImageBackground 
-      source={require('./homescreenback.jpg')}
+      source={require('./back2.jpg')}
       resizeMode="cover"
       style={styles.backgroundImage}
     >
       <View style={styles.content}>
         <Text style={styles.title}>Welcome to BudgetBuddy!</Text>
-
+        
         <View style={styles.buttonContainer}>
           <Button
             mode="contained"
@@ -48,7 +48,7 @@ const HomeScreen = ({ navigation }) => {
           <Button
             mode="outlined"
             onPress={() => navigation.navigate('Login')}
-            style={styles.logoutButton}
+            style={styles.button}
             labelStyle={styles.buttonLabel}
           >
             Log Out
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.75)', // Text shadow for better readability
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
-    marginBottom: 50, // Space from the buttons
+    marginBottom: 0, // Space from the buttons
   },
   buttonContainer: {
     width: '80%',
@@ -84,12 +84,13 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white
-    marginBottom: 10,
-    elevation: 3, // Adds shadow
+    marginBottom: 30,
+    shadowOpacity: 0.95,
+    shadowColor: 'rgba(0, 0, 0, 0.75)',
+    shadowRadius: 10 ,
+    shadowOffset : { width: -3, height: 3},
   },
-  settingsButton: {
-    // Extra style for the Settings button if needed
-  },
+
   logoutButton: {
     borderColor: '#ffffff', // White border for contrast
     borderWidth: 1,
