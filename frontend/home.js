@@ -11,6 +11,7 @@ const HomeScreen = ({ navigation }) => {
     >
       <View style={styles.content}>
         <Text style={styles.title}>Welcome to BudgetBuddy!</Text>
+        <Text style={styles.sub}>The Personal Financial Assistant in Your Pocket</Text>
         
         <View style={styles.buttonContainer}>
           <Button
@@ -23,7 +24,7 @@ const HomeScreen = ({ navigation }) => {
           </Button>
           <Button
             mode="contained"
-            onPress={() => navigation.navigate('BudgetOverview')}
+            onPress={() => navigation.navigate('BudgetOverview2')}
             style={styles.button}
             labelStyle={styles.buttonLabel}
           >
@@ -38,17 +39,9 @@ const HomeScreen = ({ navigation }) => {
             Assistant Page
           </Button>
           <Button
-            mode="contained"
-            onPress={() => navigation.navigate('BudgetOverview2')}
-            style={styles.button}
-            labelStyle={styles.buttonLabel}
-          >
-            BudgetOverview2
-          </Button>
-          <Button
             mode="outlined"
             onPress={() => navigation.navigate('Login')}
-            style={styles.button}
+            style={styles.logoutButton}
             labelStyle={styles.buttonLabel}
           >
             Log Out
@@ -66,7 +59,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'space-around', // Evenly space children vertically
+     // Evenly space children vertically
     alignItems: 'center',
   },
   title: {
@@ -76,7 +69,18 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.75)', // Text shadow for better readability
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
-    marginBottom: 0, // Space from the buttons
+    marginBottom: 30, // Space from the buttons
+    marginTop: 40
+  },
+  sub: {
+    color: '#ffffff', // White color for the text for better contrast
+    fontSize: 20, // Larger font size for the title
+    textAlign: 'center',
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)', // Text shadow for better readability
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+    marginBottom: 100, // Space from the buttons
   },
   buttonContainer: {
     width: '80%',
@@ -92,9 +96,13 @@ const styles = StyleSheet.create({
   },
 
   logoutButton: {
-    borderColor: '#ffffff', // White border for contrast
-    borderWidth: 1,
-    marginTop: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white
+    marginBottom: 30,
+    shadowOpacity: 0.95,
+    shadowColor: 'rgba(0, 0, 0, 0.75)',
+    shadowRadius: 10 ,
+    shadowOffset : { width: -3, height: 3},
+    marginTop: 180,
   },
   buttonLabel: {
     color: '#333333', // Dark text for readability on light buttons

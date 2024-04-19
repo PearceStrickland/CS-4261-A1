@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema({
     },
     transactions: [transactionSchema]
 
+
 });
 
 userSchema.pre('save', function (next) {

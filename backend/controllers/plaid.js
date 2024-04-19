@@ -7,7 +7,7 @@ const User = require('../models/user'); // Assuming you have a User model where 
 exports.getAccessToken = async (req, res) => {
   console.log("check accsess");
   const { publicToken } = req.body;
-  const userId = req.user._id; // Assuming you have user info in req.user from your auth middleware
+  const userId = req.user._id; 
   console.log("Received public token: ", publicToken);
   console.log("Request body: ", req.body);    
 

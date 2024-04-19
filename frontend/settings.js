@@ -21,29 +21,26 @@ const SettingsScreen = ({ navigation }) => {
         plaidLinkRef.current.dismiss();
       }
     
-      // Send the public token to the backend for exchange
       axios.post('https://cs4261-budget-buddy-b244eb0e4e74.herokuapp.com/get-access-token', {
         publicToken: success.publicToken
       }, {
         headers: {
-          'Authorization': `Bearer ${jsonToken}` // Ensure this is sent correctly
+          'Authorization': `Bearer ${jsonToken}`
         }
       })
       .then(response => {
         const { accessToken } = response.data;
         console.log('Access token:', accessToken);
         setAccessToken(accessToken);
-        // Use the access token to make Plaid requests now stored in the backend
         axios.post('https://cs4261-budget-buddy-b244eb0e4e74.herokuapp.com/store-transactions',
         {},
         {
           headers: {
-            'Authorization': `Bearer ${jsonToken}` // Ensure this is sent correctly
+            'Authorization': `Bearer ${jsonToken}` 
           }
         })
         .then(response => {
           console.log('store sucsses')
-          // Use the access token to make Plaid requests now stored in the backend
         })
         .catch(error => {
           console.error('Error getting transaction:', error);
@@ -67,7 +64,7 @@ const SettingsScreen = ({ navigation }) => {
     const handleOpenLink = () => {
         openLink({
             tokenConfig: {
-              token: "link-sandbox-0ea98de2-e8dc-4c7c-818f-28600f469d00", // Replace with the actual token from Plaid
+              token: "link-sandbox-0197a965-ecea-492c-816b-66d9629b9706", // Replace with the actual token from Plaid
               noLoadingState: false, // Set to true to skip loading animation, if desired
               logLevel: 'ERROR', // LogLevel can be 'DEBUG', 'INFO', 'WARN', or 'ERROR'
             },

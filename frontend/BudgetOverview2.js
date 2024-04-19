@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, Dimensions, SectionList } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, Dimensions, SectionList, TextInput} from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { useAuth } from './AuthContext';
 import axios from 'axios';
@@ -15,6 +15,8 @@ const BudgetOverview2 = () => {
   const [months, setMonths] = useState([]);
   const [isModalVisible, setModalVisible] = useState(false);
   const [sortType, setSortType] = useState({});
+  const [editableBudget, setEditableBudget] = useState(totalBudget.toString());
+  const [isBudgetSet, setIsBudgetSet] = useState(false);
   
 
   const formatDate = (dateString) => {
@@ -33,6 +35,7 @@ const BudgetOverview2 = () => {
     })
     .then(response => {
     combinedTransactions=response.data.transactions;
+    console.log(combinedTransactions)
     setTransactions(combinedTransactions);
 
     const uniqueMonths = Array.from(new Set(combinedTransactions.map(t => t.date.slice(0, 7)))).sort().reverse();
@@ -55,6 +58,7 @@ const BudgetOverview2 = () => {
     setTotalAmount(total);
     setRemainingAmount(totalBudget - total);
   };
+
 
   const groupTransactionsByCategory = (transactions, month) => {
     const monthTransactions = transactions.filter(t => t.date.startsWith(month));
@@ -85,12 +89,15 @@ const BudgetOverview2 = () => {
     setModalVisible(false);
   };
 
+  
   const chartData = () => {
     const categoryColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF', '#FFCDCC'];
     const colorMap = groupedTransactions.reduce((acc, section, index) => {
       acc[section.title] = categoryColors[index % categoryColors.length];
       return acc;
     }, {});
+
+    
   
     return groupedTransactions.map(section => ({
       name: section.title,
@@ -100,6 +107,18 @@ const BudgetOverview2 = () => {
       legendFontSize: 11,
     })).filter(section => section.amount > 0);
   };
+
+  const onBudgetSubmit = () => {
+    const newBudget = parseFloat(editableBudget.replace(/[^0-9\.]/g, ''));
+    if (!isNaN(newBudget) && newBudget >= 0) {
+      setTotalBudget(newBudget);
+      setRemainingAmount(newBudget - totalAmount);
+      setIsBudgetSet(true);
+    } else {
+      alert('Please enter a valid number for the budget.');
+    }
+  };
+
 
  
   return (
@@ -172,10 +191,23 @@ const BudgetOverview2 = () => {
         ListHeaderComponent={
           <>
            <View style={styles.budgetHeader}>
-      <View style={styles.budgetInfo}>
+           <View style={styles.budgetInfo}>
         <View style={styles.budgetInfoItem}>
           <Text style={styles.budgetLabel}>Total Budget</Text>
-          <Text style={styles.budgetValue}>${totalBudget.toFixed(2)}</Text>
+          <TextInput
+            style={styles.budgetValue}
+            value={editableBudget}
+            onChangeText={text => setEditableBudget(text)}
+            keyboardType="numeric"
+            returnKeyType="done"
+            onEndEditing={() => {
+              const newBudget = parseFloat(editableBudget.replace(/[^0-9]/g, ''));
+              if (!isNaN(newBudget) && newBudget >= 0) {
+                setTotalBudget(newBudget);
+                setRemainingAmount(newBudget - totalAmount);
+              }
+            }}
+          />
         </View>
         <View style={styles.divider}></View>
         <View style={styles.budgetInfoItem}>
